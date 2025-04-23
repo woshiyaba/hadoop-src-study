@@ -331,4 +331,6 @@ public interface NameNodeMXBean {
    */
   String getVerifyECWithTopologyResult();
 
+  // 获取namenode启动计数
+  long getNameNodeStartupCount();
 }

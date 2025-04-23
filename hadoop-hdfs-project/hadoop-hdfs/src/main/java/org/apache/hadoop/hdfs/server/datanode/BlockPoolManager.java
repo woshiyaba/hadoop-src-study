@@ -121,10 +121,13 @@ class BlockPoolManager {
   
   synchronized void startAll() throws IOException {
     try {
+      // 隐藏了极为关键的一部分，datanode启动的时候会向namenode进行注册感知到自己
+      //
       UserGroupInformation.getLoginUser().doAs(
           new PrivilegedExceptionAction<Object>() {
             @Override
             public Object run() throws Exception {
+              // 这里的启动实际上是启动每一个BPServiceActor的线程
               for (BPOfferService bpos : offerServices) {
                 bpos.start();
               }
@@ -209,7 +212,8 @@ class BlockPoolManager {
       if (!toAdd.isEmpty()) {
         LOG.info("Starting BPOfferServices for nameservices: " +
             Joiner.on(",").useForNull("<default>").join(toAdd));
-      
+
+        // 这里就是BPOfferService的创建
         for (String nsToAdd : toAdd) {
           Map<String, InetSocketAddress> nnIdToAddr = addrMap.get(nsToAdd);
           Map<String, InetSocketAddress> nnIdToLifelineAddr =
@@ -229,15 +233,21 @@ class BlockPoolManager {
           BPOfferService bpos = createBPOS(nsToAdd, nnIds, addrs,
               lifelineAddrs);
           bpByNameserviceId.put(nsToAdd, bpos);
+
+          // 一个namenode就是一个BPOfferService，包含一个active和一个standby 联邦的时候会更多
           offerServices.add(bpos);
         }
       }
+
+      // 这里的startall会启动对应的BPOfferServiceActor那些线程
       startAll();
     }
 
     // Step 4. Shut down old nameservices. This happens outside
     // of the synchronized(this) lock since they need to call
     // back to .remove() from another thread
+
+
     if (!toRemove.isEmpty()) {
       LOG.info("Stopping BPOfferServices for nameservices: " +
           Joiner.on(",").useForNull("<default>").join(toRemove));
@@ -251,6 +261,8 @@ class BlockPoolManager {
     }
     
     // Step 5. Update nameservices whose NN list has changed
+    // 如果namenodeService列表发生了变化也是这里来处理
+    // 初始化新的BPServiceActor来进行通信
     if (!toRefresh.isEmpty()) {
       LOG.info("Refreshing list of NNs for nameservices: " +
           Joiner.on(",").useForNull("<default>").join(toRefresh));

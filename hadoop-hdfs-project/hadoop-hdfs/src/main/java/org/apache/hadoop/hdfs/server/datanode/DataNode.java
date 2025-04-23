@@ -561,6 +561,8 @@ public class DataNode extends ReconfigurableBase
     try {
       hostName = getHostName(conf);
       LOG.info("Configured hostname is {}", hostName);
+      //实例化datanode的入口
+      // 初始化了datanode所有的关键组件
       startDataNode(dataDirs, resources);
     } catch (IOException ie) {
       shutdown();
@@ -1332,6 +1334,8 @@ public class DataNode extends ReconfigurableBase
     // Add all the RPC protocols that the Datanode implements    
     RPC.setProtocolEngine(getConf(), ClientDatanodeProtocolPB.class,
         ProtobufRpcEngine2.class);
+
+    // 这就是定义好的rpc server可以提供和处理rpc接口
     ClientDatanodeProtocolServerSideTranslatorPB clientDatanodeProtocolXlator = 
           new ClientDatanodeProtocolServerSideTranslatorPB(this);
     BlockingService service = ClientDatanodeProtocolService
@@ -1459,6 +1463,7 @@ public class DataNode extends ReconfigurableBase
 
   private void initDataXceiver() throws IOException {
     // find free port or use privileged port provided
+    // 接受tcp请求的东西
     TcpPeerServer tcpPeerServer;
     if (secureResources != null) {
       tcpPeerServer = new TcpPeerServer(secureResources);
@@ -1476,6 +1481,9 @@ public class DataNode extends ReconfigurableBase
     streamingAddr = tcpPeerServer.getStreamingAddr();
     LOG.info("Opened streaming server at {}", streamingAddr);
     this.threadGroup = new ThreadGroup("dataXceiverServer");
+
+    // 实例化一个DataXceiverServer对象，并将其放入线程组中
+    // 再datanode上专门负责为clint和datanode接受读写block的
     xserver = new DataXceiverServer(tcpPeerServer, getConf(), this);
     this.dataXceiverServer = new Daemon(threadGroup, xserver);
     this.threadGroup.setDaemon(true); // auto destroy when empty
@@ -1724,11 +1732,14 @@ public class DataNode extends ReconfigurableBase
           + "to the number of configured volumes (" + volsConfigured + ").");
     }
 
+    //负责管理datanode上的blcok
     storage = new DataStorage();
     
     // global DN settings
     registerMXBean();
+    // 初始化一个DataXceiverServer，用于处理client数据传输任务
     initDataXceiver();
+    // 初始化httpserver rpcserver
     startInfoServer();
     pauseMonitor = new JvmPauseMonitor();
     pauseMonitor.init(getConf());
@@ -1741,6 +1752,7 @@ public class DataNode extends ReconfigurableBase
     dnUserName = UserGroupInformation.getCurrentUser().getUserName();
     LOG.info("dnUserName = {}", dnUserName);
     LOG.info("supergroup = {}", supergroup);
+    // 初始化一个IpcServer，用于处理client rpc请求 RPC
     initIpcServer();
 
     metrics = DataNodeMetrics.create(getConf(), getDisplayName());
@@ -1751,7 +1763,10 @@ public class DataNode extends ReconfigurableBase
     ecWorker = new ErasureCodingWorker(getConf(), this);
     blockRecoveryWorker = new BlockRecoveryWorker(this);
 
+    // 管理block块 blockpool的概念
     blockPoolManager = new BlockPoolManager(this);
+
+    // 通过refreshNamenodes做了一些初始化的事情
     blockPoolManager.refreshNamenodes(getConf());
 
     // Create the ReadaheadPool from the DataNode context so we can
@@ -3095,8 +3110,10 @@ public class DataNode extends ReconfigurableBase
   @InterfaceAudience.Private
   public static DataNode createDataNode(String args[], Configuration conf,
       SecureResources resources) throws IOException {
+    // 初始化datanode实例，同事进行一些组件的初始化
     DataNode dn = instantiateDataNode(args, conf, resources);
     if (dn != null) {
+      // 启动datanode的httpserver rpcserver 等等
       dn.runDatanodeDaemon();
     }
     return dn;
@@ -3145,6 +3162,8 @@ public class DataNode extends ReconfigurableBase
     DefaultMetricsSystem.initialize("DataNode");
 
     assert locations.size() > 0 : "number of data directories should be > 0";
+
+    // 然后直接new了一个datanode
     return new DataNode(conf, locations, storageLocationChecker, resources);
   }
 

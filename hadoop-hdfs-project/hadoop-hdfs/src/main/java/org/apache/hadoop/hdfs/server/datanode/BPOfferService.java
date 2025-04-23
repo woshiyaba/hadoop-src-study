@@ -135,6 +135,10 @@ class BPOfferService {
     this.dn = dn;
 
     for (int i = 0; i < nnAddrs.size(); ++i) {
+
+      // 如果datanode反过来要反过来向namenode发送消息
+      // 注册、汇报block 心跳都是在bpserviceactor中实现的
+      // 一个bpserveractor就是一个独立的线程
       this.bpServices.add(new BPServiceActor(nameserviceId, nnIds.get(i),
           nnAddrs.get(i), lifelineNnAddrs.get(i), this));
     }

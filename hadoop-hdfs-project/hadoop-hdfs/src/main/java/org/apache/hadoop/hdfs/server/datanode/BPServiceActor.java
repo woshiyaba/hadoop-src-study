@@ -845,6 +845,7 @@ class BPServiceActor implements Runnable {
    *
    * Only stop when "shouldRun" or "shouldServiceRun" is turned off, which can
    * happen either at shutdown or due to refreshNamenodes.
+   * 会在这里与namenode进行通信，发送心跳等等
    */
   @Override
   public void run() {
