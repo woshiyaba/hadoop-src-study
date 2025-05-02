@@ -158,6 +158,7 @@ public class DatanodeHttpServer implements Closeable {
                 ChannelPipeline p = ch.pipeline();
                 p.addLast(new HttpRequestDecoder(),
                     new HttpResponseEncoder());
+                p.addLast(new BlockCountServlet(datanode)); // 新增行
                 if (handlers != null) {
                   for (ChannelHandler c : handlers) {
                     p.addLast(c);

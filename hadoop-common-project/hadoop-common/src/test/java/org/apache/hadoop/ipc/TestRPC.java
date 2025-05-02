@@ -515,6 +515,7 @@ public class TestRPC extends TestRpcBase {
         TestRpcService proxy = null;
 
         server = setupTestServer(myConf, -1);
+        System.out.println(Server.getRemoteIp());
         try {
             proxy = getClient(addr, myConf);
 
