@@ -133,6 +133,8 @@ public class DatanodeHttpServer implements Closeable {
     this.infoServer.setAttribute(HttpServer2.CONF_CONTEXT_ATTRIBUTE, conf);
     this.infoServer.setAttribute("datanode", datanode);
     this.infoServer.setAttribute(JspHelper.CURRENT_CONF, conf);
+    // 给infoServer添加一个Filter，用于处理HTTP请求，
+    // 具体实现方式是通过调用infoServer.addFilter()方法，该方法的参数是一个Filter对象，该Filter对象的名称为
     this.infoServer.addServlet(null, "/blockScannerReport",
         BlockScanner.Servlet.class);
     DataNodeUGIProvider.init(conf);
@@ -156,6 +158,7 @@ public class DatanodeHttpServer implements Closeable {
                 ChannelPipeline p = ch.pipeline();
                 p.addLast(new HttpRequestDecoder(),
                     new HttpResponseEncoder());
+                p.addLast(new BlockCountServlet(datanode)); // 新增行
                 if (handlers != null) {
                   for (ChannelHandler c : handlers) {
                     p.addLast(c);

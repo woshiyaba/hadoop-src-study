@@ -291,7 +291,7 @@
                         <configuration>
                             <nodeVersion>${nodejs.version}</nodeVersion>
                             <yarnVersion>${yarnpkg.version}</yarnVersion>
-                            <nodeDownloadRoot>file:///opt/app/maven/repo/com/github/eirslett/node/14.10.0/</nodeDownloadRoot>
+<!--                            <nodeDownloadRoot>file:///opt/app/maven/repo/com/github/eirslett/node/14.10.0/</nodeDownloadRoot>-->
                         </configuration>
                     </execution>
                     <execution>

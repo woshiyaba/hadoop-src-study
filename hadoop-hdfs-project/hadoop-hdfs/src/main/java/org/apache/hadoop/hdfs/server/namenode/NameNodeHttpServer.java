@@ -58,11 +58,11 @@ public class NameNodeHttpServer {
   private HttpServer2 httpServer;
   private final Configuration conf;
   private final NameNode nn;
-  
+
   private InetSocketAddress httpAddress;
   private InetSocketAddress httpsAddress;
   private final InetSocketAddress bindAddress;
-  
+
   public static final String NAMENODE_ADDRESS_ATTRIBUTE_KEY = "name.node.address";
   public static final String FSIMAGE_ATTRIBUTE_KEY = "name.system.image";
   protected static final String NAMENODE_ATTRIBUTE_KEY = "name.node";
@@ -208,7 +208,7 @@ public class NameNodeHttpServer {
 
   /**
    * Sets fsimage for use by servlets.
-   * 
+   *
    * @param fsImage FSImage to set
    */
   void setFSImage(FSImage fsImage) {
@@ -217,7 +217,7 @@ public class NameNodeHttpServer {
 
   /**
    * Sets address of namenode for use by servlets.
-   * 
+   *
    * @param nameNodeAddress InetSocketAddress to set
    */
   void setNameNodeAddress(InetSocketAddress nameNodeAddress) {
@@ -227,7 +227,7 @@ public class NameNodeHttpServer {
 
   /**
    * Sets startup progress of namenode for use by servlets.
-   * 
+   *
    * @param prog StartupProgress to set
    */
   void setStartupProgress(StartupProgress prog) {
@@ -255,6 +255,8 @@ public class NameNodeHttpServer {
         IsNameNodeActiveServlet.class);
     httpServer.addInternalServlet(NetworkTopologyServlet.SERVLET_NAME,
         NetworkTopologyServlet.PATH_SPEC, NetworkTopologyServlet.class);
+    httpServer.addServlet(SafeModeServlet.SERVLET_NAME,
+        SafeModeServlet.PATH_SPEC, SafeModeServlet.class);
   }
 
   static FSImage getFsImageFromContext(ServletContext context) {
@@ -286,7 +288,7 @@ public class NameNodeHttpServer {
 
   /**
    * Returns StartupProgress associated with ServletContext.
-   * 
+   *
    * @param context ServletContext to get
    * @return StartupProgress associated with context
    */

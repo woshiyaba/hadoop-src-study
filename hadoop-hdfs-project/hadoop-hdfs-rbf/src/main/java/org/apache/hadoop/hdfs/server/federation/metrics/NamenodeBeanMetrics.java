@@ -844,6 +844,11 @@ public class NamenodeBeanMetrics
   }
 
   @Override
+  public long getNameNodeStartupCount() {
+    return -1;
+  }
+
+  @Override
   public long getCurrentTokensCount() {
     return 0;
   }

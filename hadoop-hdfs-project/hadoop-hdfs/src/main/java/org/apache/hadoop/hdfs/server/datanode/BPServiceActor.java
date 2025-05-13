@@ -53,6 +53,7 @@ import org.apache.hadoop.hdfs.protocol.UnregisteredNodeException;
 import org.apache.hadoop.hdfs.protocolPB.DatanodeLifelineProtocolClientSideTranslatorPB;
 import org.apache.hadoop.hdfs.protocolPB.DatanodeProtocolClientSideTranslatorPB;
 import org.apache.hadoop.hdfs.server.common.IncorrectVersionException;
+import org.apache.hadoop.hdfs.server.datanode.metrics.BlockReportStatistics;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.protocol.BlockReportContext;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeCommand;
@@ -101,6 +102,8 @@ class BPServiceActor implements Runnable {
 
   Thread bpThread;
   DatanodeProtocolClientSideTranslatorPB bpNamenode;
+
+  private final BlockReportStatistics stats = new BlockReportStatistics();
 
   enum RunningState {
     CONNECTING, INIT_FAILED, RUNNING, EXITED, FAILED;
@@ -543,7 +546,7 @@ class BPServiceActor implements Runnable {
         outliersReportDue && dnConf.diskStatsEnabled && dn.getDiskMetrics() != null ?
             SlowDiskReports.create(dn.getDiskMetrics().getDiskOutliersStats()) :
             SlowDiskReports.EMPTY_REPORT;
-
+    long start = Time.monotonicNow();
     HeartbeatResponse response = bpNamenode.sendHeartbeat(bpRegistration,
         reports,
         dn.getFSDataset().getCacheCapacity(),
@@ -555,7 +558,9 @@ class BPServiceActor implements Runnable {
         requestBlockReportLease,
         slowPeers,
         slowDisks);
-
+    stats.setLastTriggerType("HEARTBEAT"); // 根据实际触发源修改
+    stats.setLastBlockCount(reports.length);
+    stats.setLastDuration(Time.monotonicNow() - start);
     if (outliersReportDue) {
       // If the report was due and successfully sent, schedule the next one.
       scheduler.scheduleNextOutlierReport();
@@ -845,6 +850,7 @@ class BPServiceActor implements Runnable {
    *
    * Only stop when "shouldRun" or "shouldServiceRun" is turned off, which can
    * happen either at shutdown or due to refreshNamenodes.
+   * 会在这里与namenode进行通信，发送心跳等等
    */
   @Override
   public void run() {
